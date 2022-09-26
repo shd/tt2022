@@ -219,4 +219,70 @@ W = \lambda x.\lambda y.x\ y\ y\end{array}$$
 \end{enumerate}
 \end{enumerate}
 
+
+\section*{Домашнее задание №3: просто-типизированное лямбда-исчисление}
+\begin{enumerate}
+
+\item Пусть фиксирован тип чёрчевского нумерала $\eta = (\alpha\rightarrow\alpha) \rightarrow (\alpha\rightarrow\alpha)$. 
+Найдите тип для следующих конструкций и постройте доказательство:
+\begin{enumerate}
+\item $\overline{2}$ (покажите, что его тип --- $\eta$).
+\item $(+1)$.
+\item $Plus$.
+\item $Mul$ (не каждая реализация умножения имеет тип в просто-типизированном лямбда исчислении;
+вам требуется найти нужную)
+\end{enumerate}
+
+\item Имеет ли тип --- и какой:
+\begin{enumerate}
+\item операция вычитания 1 (выраженная через <<трюк зуба мудрости>>)? Общий ответ не требуется, 
+достаточно рассмотреть какую-то одну реализацию.
+\item операция вычитания ($\lambda m.\lambda n.m\ (-1)\ n$)?
+\item операция возведения в степень ($Power ::= \lambda m.\lambda n.n\ m$)? 
+\item функция $\lambda x.Power\ x\ x$?
+\end{enumerate}
+
+\item Каков тип:
+\begin{enumerate}
+\item комбинаторов $S$ и $K$;
+\item истины и лжи.
+\end{enumerate}
+
+\item Рассмотрим полную интуиционистскую логику, с конъюнкцией, дизъюнкцией и ложью. Какой тип у следующих конструкций,
+и какие правила вывода интуиционистской логики им соответстсвуют (ответ требует демонстрации корректности этих правил
+для данных конструкций --- то есть вывод про тип результата применения правила должен всегда иметь место для выражений
+соответствующего вида):
+\begin{enumerate}
+\item Упорядоченная пара (MkPair, PrL, PrR).
+\item Алгебраический тип (InL: $\lambda x.\lambda a.\lambda b.a\ x$, InR: $\lambda x.\lambda a.\lambda b.b\ x$, Case).
+\end{enumerate}
+
+%\item Предложим альтернативные аксиомы для конъюнкции:
+%
+%$$\infer[\text{Введ. }\with]{\Gamma\vdash \alpha\with \beta}{\Gamma\vdash \alpha\ \ \ \Gamma\vdash \beta}\quad\quad
+%  \infer[\text{Удал. }\with]{\Gamma\vdash \gamma}{\Gamma\vdash \alpha\with \beta\ \ \ \Gamma, \alpha, \beta\vdash \gamma}$$
+%
+%\begin{enumerate}                                                             
+%\item Предложите лямбда-выражения, соответствующие данным аксиомам; поясните, как данные выражения 
+%абстрагируют понятие <<упорядоченной пары>>.
+%\item Выразите изложенные в лекции аксиомы конъюнкции через приведённые в условии.
+%\item Выразите приведённые в условии аксиомы конъюнкции через изложенные в лекции.
+%\end{enumerate}
+
+\item Докажите лемму о редукции (subject reduction lemma): если $A \twoheadrightarrow_\beta B$ и $\vdash A: \tau$, то
+$\vdash B: \tau$.
+
+Верно ли обратное: если $A \twoheadrightarrow_\beta B$ и $\vdash B: \tau$, то
+$\vdash A: \tau$?
+
+\item Как мы уже разбирали, $\not\vdash x\ x:\tau$ в силу дополнительных ограничений
+правила
+$$\infer[x \notin FV(\Gamma)]{\Gamma, x:\tau\vdash x:\tau}{}$$
+
+Найдите лямбда-выражение $N$, что $\not\vdash N:\tau$ в силу ограничений правила
+$$\infer[x \notin FV(\Gamma)]{\Gamma \vdash \lambda x.N:\sigma\to\tau}{\Gamma, x:\sigma \vdash N:\tau}$$
+
+\item Верно ли, что $S = B(BW)(BBC)$? Если нет, то как правильно?
+\end{enumerate}
+
 \end{document}
