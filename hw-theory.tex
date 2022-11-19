@@ -6,6 +6,7 @@
 \usepackage{amssymb}
 \usepackage{enumerate}
 \usepackage{stmaryrd}
+\usepackage{comment}
 \usepackage{cmll}
 \usepackage{mathrsfs}
 \usepackage{hyperref}
@@ -667,4 +668,132 @@ $n$ элементов --- и покажите, что:
 \end{enumerate}
 \end{enumerate}
 
+\section*{Домашнее задание №11: <<Элиминаторы; предикативные уровни>>}
+\begin{enumerate}
+\item Чтобы было проще решать задачи из предыдущего задания, давайте решим дополнительную задачу
+на похожую тему. Рассмотрим следующее доказательство уникальности элементов списка:
+\begin{verbatim}
+\func not-member (A : \Type) (elem : A) (l : List A) : \Type \elim l
+  | nil => \Sigma
+  | :: hd tl => \Sigma (Not (hd = elem)) (not-member A elem tl)
+
+\func unique-list (A : \Type) (l : List A) : \Type \elim l
+  | nil => \Sigma
+  | :: hd tl => \Sigma (not-member A hd tl) (unique-list A tl)
+\end{verbatim}
+
+Докажем, что список $[0,1,2]$ состоит из уникальных элементов:
+\begin{verbatim}
+\func r-unique => unique-list Nat (0 :: 1 :: 2 :: nil)
+\func x : r-unique => ((contradiction, (contradiction, ())), ((contradiction, ()), ((), ())))
+\end{verbatim}
+
+\begin{enumerate} 
+\item Напишите функцию, строящую список \verb!b! натуральных чисел от 0 до n и доказательство\\ \verb!unique-list Nat b!.
+\item Покажите, что если $a_0 < a_1 < \dots < a_n$, то список $[a_0,a_1,\dots,a_n]$ уникальный.
+\item Покажите, что если $n \ge 2$ и $a_k \ne a_{k+1}$ при $0 \le k < n$, то необязательно, что список
+$[a_0,a_1,\dots,a_n]$ --- уникальный.
+\end{enumerate}
+
+\item Как вы помните из лекции, в языке Аренд существует иерархия вложенных типовых универсумов. Если в типе отсутствует
+упоминание \verb!\Type!, то данный тип принадлежит универсуму 0. Однако, если в типе упоминается \verb!\Type k!,
+то тип принадлежит универсумам, не меньшим $k+1$. Уровень универума обозначается специальным ключевым словом \verb!\lp!.
+Над индексами можно проводить простые операции и сопоставление с образцом (\verb!\suc\lp!). Более подробно
+можно это прочесть в документации по языку Аренд:
+
+\url{https://arend-lang.github.io/documentation/tutorial/PartI/universes.html}
+%\begin{enumerate}
+%\item Определите функцию \verb!\id!, возвращающую 
+%\end{enumerate}
+
+Рассмотрим определения:
+\begin{verbatim}
+\func ChurchT (x : \Type) => (x -> x) -> (x -> x)
+\func Church => \Pi (x : \Type) -> ChurchT x
+\func Zero : Church => \lam t f x => x
+
+\func incT (t : \Type) (n : ChurchT t) => \lam f x => n f (f x)
+\func pair_plus (type : \Type) (pair : \Sigma (ChurchT type) (ChurchT type)) :
+  \Sigma (ChurchT type) (ChurchT type) => (pair.2, incT type pair.2)
+\func dec (n : Church) : Church => \lam (t : \Type) =>
+    (n (\Sigma (ChurchT t) (ChurchT t)) (pair_plus t) (Zero t, Zero t)).1
+\func sub (a : Church (\suc\lp)) (b : Church) => a (Church \lp) dec b
+\end{verbatim}
+
+Определите, развивая определения выше:
+\begin{enumerate}
+\item Операцию умножения.
+\item Операцию <<деление на три>> (естественно, в версии, не использующей $Y$-комбинатор).
+\item Операцию возведения в степень, определявшуюся как $\lambda m.\lambda n.n\ m$.
+\item Деление.
+\item Вычисление факториала.
+\end{enumerate}
+
+\item Определите следующие свойства как пропы и покажите, что это так (докажите \verb!isProp! для каждого,
+см. стандартную библиотеку):
+\begin{enumerate}
+\item Натуральное число простое.
+\item Натуральное число не делится на 3.
+\item $x$ и $y$ натуральные, $x < y$.
+\item Натуральное число --- полный квадрат.
+\item Два натуральных числа имеют <<нетривиальный>> (не равный 1 или одному из этих чисел) общий делитель.
+\end{enumerate}
+
+\begin{comment}
+\item На лекции использовались разные названия/переводы для операции понижения гомотопического 
+уровня типа. Давайте выберем \emph{пропозициональное усечение}.
+Пропозиционально усечённые типы (\verb!TruncP!) требуют специальных условий для элиминации \verb!inP!.
+А именно, тип выражения, внутри которого проводится элиминация, должен иметь гомотопический 
+уровень $-1$ (то есть, принадлежать универсуму \verb!\Prop!).
+
+Далеко не для всех типов очевидно, что они имеют гомотопический уровень $-1$. 
+Например, тип \verb!Dec!. Обратим внимание на два обстоятельства:
+\begin{enumerate}
+\item тип \verb!Dec! --- это функция из типа в тип, вспомогательная абстрактная конструкция; 
+типом же, интересующим всех, является \verb!Dec P! --- результат применения данной функции;
+\item каково бы ни было утверждение $P$, в типе \verb!Dec P!
+всегда единственный представитель: либо \verb!yes P!, если $P$ обитаем, 
+либо \verb!no (P -> Empty)!, если $P$ необитаем. 
+Если бы оба эти варианта имели бы место одновременно, то Аренд был бы противоречив.
+\end{enumerate}
+
+Для таких неочевидных случаев необходимо предоставлять компилятору функцию, доказывающую равенство всех значений типа. 
+Функция должна иметь префикс \verb!\use \level! и указываться как часть типа данных (используйте \verb!\where!). 
+Например, в следующем типе <<простое число>> данная функция должна доказать, что любые два значения типа при данном $x$ равны:
+
+\begin{verbatim}
+\data Div3 (x : Nat)
+  | remainder-zero (Exists (p : Nat) (p Nat.* 3 = x))
+  | remainder-one (Exists (p : Nat) (p Nat.* 3 Nat.+ 1 = x))
+  | remainder-two (Exists (p : Nat) (p Nat.* 3 Nat.+ 2 = x))
+  \where \use \level levelProp {x : Nat} (a b : Div3 x) : a = b => {?}
+\end{verbatim}
+
+При необходимости (например, если функция \verb!\use \level! не указана) можно специально 
+указать на доказательство пропозициональности результата, воспользовавшись 
+функцией \verb!TruncP.rec!.
+
+\begin{enumerate}
+\item Замените \verb!{?}! в тексте выше на корректное доказательство.
+\item Определите функцию, которая бы по $x$ и значению $\exists p q.3 \cdot p + q = x \with 0 \le q < 3$ возвращала бы \verb!Div3 x!
+(понятно, можно разделить $x$ на 3, но нам уже результат деления дали вторым аргументом --- задача в том, чтобы им воспользоваться).
+\item Постройте аналогичный тип \verb!Prime x! для простых чисел --- с тремя вариантами \verb!less-than-two!, \verb!is-prime!, 
+\verb!is-composite! --- и определите функцию, строящую по числу значение данного типа.
+\item Покажите, что в типе \verb!Prime (x*x + 2*x + 1)! всегда (кроме граничных случаев) обитает вариант \verb!is-composite!.
+\item Покажите, что в типе 
+\begin{verbatim}
+\data SuperDec (P : \Prop)
+| sure P
+| nope (P -> Empty)
+| neither ((P || (P -> Empty)) -> Empty)
+\where \use \level superDecProp {P : \Prop} (a b : SuperDec P): a = b => {?}
+\end{verbatim}
+вариант \verb!neither! невозможен (также, заполните пропущенное доказательство \verb!superDecProp!).
+\end{enumerate}
+
+\item Покажите, что можно построить функцию, которая из значений \verb!x : Nat! и\\\verb!p : Exists (p : Nat) (p * p = x)! получает
+\verb!\Sigma (p : Nat) (p * p = x)! (мы здесь должны существенно использовать единственность натурального корня числа).
+\end{comment}
+
+\end{enumerate}
 \end{document}
