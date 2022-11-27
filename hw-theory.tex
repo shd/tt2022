@@ -738,27 +738,66 @@ $[a_0,a_1,\dots,a_n]$ --- уникальный.
 \item Натуральное число --- полный квадрат.
 \item Два натуральных числа имеют <<нетривиальный>> (не равный 1 или одному из этих чисел) общий делитель.
 \end{enumerate}
-
-\begin{comment}
-\item На лекции использовались разные названия/переводы для операции понижения гомотопического 
-уровня типа. Давайте выберем \emph{пропозициональное усечение}.
-Пропозиционально усечённые типы (\verb!TruncP!) требуют специальных условий для элиминации \verb!inP!.
-А именно, тип выражения, внутри которого проводится элиминация, должен иметь гомотопический 
-уровень $-1$ (то есть, принадлежать универсуму \verb!\Prop!).
-
-Далеко не для всех типов очевидно, что они имеют гомотопический уровень $-1$. 
-Например, тип \verb!Dec!. Обратим внимание на два обстоятельства:
-\begin{enumerate}
-\item тип \verb!Dec! --- это функция из типа в тип, вспомогательная абстрактная конструкция; 
-типом же, интересующим всех, является \verb!Dec P! --- результат применения данной функции;
-\item каково бы ни было утверждение $P$, в типе \verb!Dec P!
-всегда единственный представитель: либо \verb!yes P!, если $P$ обитаем, 
-либо \verb!no (P -> Empty)!, если $P$ необитаем. 
-Если бы оба эти варианта имели бы место одновременно, то Аренд был бы противоречив.
 \end{enumerate}
 
-Для таких неочевидных случаев необходимо предоставлять компилятору функцию, доказывающую равенство всех значений типа. 
-Функция должна иметь префикс \verb!\use \level! и указываться как часть типа данных (используйте \verb!\where!). 
+\section*{Домашнее задание №12: <<Гомотопические уровни>>}
+
+\begin{enumerate}
+\item Напомним тип данных \verb!IsEven! из лекции:
+
+\begin{verbatim}
+\data IsEven (n : Nat) \elim n
+  | 0 => zero-is-even
+  | (suc (suc k)) => next-next (IsEven k)
+\end{verbatim}
+
+Доказать, что этот тип является утверждением, можно например так:
+
+\begin{verbatim}
+\func all-even-different (n : Nat) (a b : IsEven n) : a = b \elim n, a, b
+  | 0, zero-is-even, zero-is-even => idp
+  | suc (suc n), next-next a, next-next b => pmap next-next (all-even-different n a b)
+
+\func is-even-isProp (n : Nat) : isProp (IsEven n) => all-even-different n
+\end{verbatim}
+
+Обратите внимание: по переменным $n$, $a$ и $b$ производится \emph{элиминация}, то есть множество 
+значений переменных разбивается на фрагменты (в соответствии с конструкторами типа данных), 
+и доказательство утверждения проводится независимо для каждого фрагмента; 
+в частности, цель доказательства изменяется и просходит замена переменных $a$ и $b$ на сопоставляемые
+варианты (вместо ожидаемого типа \verb!a = b! мы ожидаем тип \verb!zero-is-even = zero-is-even!, и т.п.).
+Сравните с лекцией про элиминаторы, каждый из вариантов --- тело отдельной функции-элиминатора. 
+
+Чтобы воспроизвести тот же эффект в конструкции \verb!\case!, нужно указывать ключевое слово 
+\verb!\elim! перед каждой элиминируемой переменной: 
+\begin{verbatim}
+\case \elim n, \elim a, \elim b \with { ... }
+\end{verbatim}
+
+Полный код, определяющий тип \verb!IsEven! (вместе с доказательством того, что тип --- утверждение),
+выглядит так:
+
+\begin{verbatim}
+\data IsEven (n : Nat) \elim n
+  | 0 => zero-is-even
+  | (suc (suc k)) => next-next (IsEven k)
+  \where {
+    \func all-even-different ... -- скопируйте код функции сюда
+    \use \level is-even-isProp (n : Nat) : isProp (IsEven n) => all-even-different n
+  }
+\end{verbatim}
+
+Однако, незавершённым остаётся доказательство разрешимости типа \verb!IsEven n!. Восполните лакуны:
+
+\begin{verbatim}
+\func even-is-dec (a : Nat) : Dec (IsEven a) \elim a
+  | 0 => yes zero-is-even
+  | 1 => no {?}
+  | suc (suc a) => {?}
+\end{verbatim}
+
+\item Справедливости ради, в предыдущем задании компилятор сам может догадаться, что \verb!IsEven! --- утверждение.
+Но далеко не для всех типов это очевидно, и тогда функция с префиксом \verb!\use \level! становится необходимой.
 Например, в следующем типе <<простое число>> данная функция должна доказать, что любые два значения типа при данном $x$ равны:
 
 \begin{verbatim}
@@ -768,10 +807,6 @@ $[a_0,a_1,\dots,a_n]$ --- уникальный.
   | remainder-two (Exists (p : Nat) (p Nat.* 3 Nat.+ 2 = x))
   \where \use \level levelProp {x : Nat} (a b : Div3 x) : a = b => {?}
 \end{verbatim}
-
-При необходимости (например, если функция \verb!\use \level! не указана) можно специально 
-указать на доказательство пропозициональности результата, воспользовавшись 
-функцией \verb!TruncP.rec!.
 
 \begin{enumerate}
 \item Замените \verb!{?}! в тексте выше на корректное доказательство.
@@ -791,9 +826,116 @@ $[a_0,a_1,\dots,a_n]$ --- уникальный.
 вариант \verb!neither! невозможен (также, заполните пропущенное доказательство \verb!superDecProp!).
 \end{enumerate}
 
-\item Покажите, что можно построить функцию, которая из значений \verb!x : Nat! и\\\verb!p : Exists (p : Nat) (p * p = x)! получает
-\verb!\Sigma (p : Nat) (p * p = x)! (мы здесь должны существенно использовать единственность натурального корня числа).
-\end{comment}
+\item Рассмотрим определение целых чисел как упорядоченной пары: $\langle a,b\rangle \subseteq \mathbb{N}^2$,
+причём $\langle a,b\rangle \approx \langle c,d\rangle$, если $a + d = b + c$. Построим соответствующий тип
+данных, $\mathbb{N}^2/\approx$:
 
+\begin{verbatim}
+\data Integer
+  | int_data (l r : Nat)
+  | int_eq (a b c d : Nat) (a Nat.+ d = b Nat.+ c) : int_data a b = int_data c d
+\end{verbatim}
+
+Обратите внимание на второй конструктор \verb!int_eq! --- это специальный конструктор для отношения эквивалентности,
+он постулирует равенство между элементами, и его можно использовать для доказательства такого равенства.
+Указание на особую роль конструктора --- указание его типа, и значением конструктора являются не сами элементы типа
+\verb!Integer! (как это имеет место в случае \verb!int_data!), а пути между элементами типа \verb!Integer!.
+Покажем, например, что $[\langle 1,3\rangle] = [\langle 0,2\rangle]$:
+
+\begin{verbatim}
+\func r : int_data 1 3 = int_data 0 2 => int_eq 1 3 0 2 idp
+\end{verbatim}
+
+Теперь мы можем определить функции на целых числах:
+
+\begin{verbatim}
+\func inc (a : Integer) : Integer \elim a
+  | int_data l r => int_data (suc l) r
+  | int_eq a b c d proof => int_eq (suc a) b (suc c) d (pmap suc proof)
+\end{verbatim}
+
+Обратите внимание, мы должны указать не только образы для всех элементов \verb!Integer! (первый случай), но и показать, что 
+равные элементы перешли в равные (второй случай).
+А именно, нам потребовалось доказать, что операция прибавления 1 вернёт эквивалентные числа для эквивалентных аргументов:
+если $\langle a,b\rangle \approx \langle c,d\rangle$, то $\langle a+1, b\rangle \approx \langle c+1,d\rangle$.
+
+\begin{enumerate}
+\item Определите функцию \verb!isPositive : Integer -> \Type!, результат которой обитаем тогда и только тогда,
+когда аргумент --- положительное число.
+\item Покажите \verb!Dec (isPositive k)! для любого целого $k$.
+\item Определите функцию \verb!dec : Integer -> Integer!, уменьшающую число на 1.
+\item Докажите, что \verb!inc (dec x) = x!.
+\item Определите функцию \verb!abs : Integer -> Nat!, возвращающую модуль целого числа.
+\item Определите функцию \verb!plus : Integer -> Integer -> Integer!, складывающую два числа.
+\end{enumerate}
+
+\item Заметим, что получившийся тип \verb!Integer! множеством (\verb!\Set!) не будет. Чтобы такое выполнялось, необходимо
+показать равенство равенств элементов ($\Pi x^\texttt{Integer}.\Pi y^\texttt{Integer}.\Pi a^{x = y}.\Pi b^{x = y}.a = b$). 
+Это можно сделать (точнее, \emph{постулировать}), например, с помощью конструкции \verb!\truncate!:
+
+\begin{verbatim}
+\truncate \data Integer : \Set
+  | int_data (l r : Nat)
+  | int_eq (a b c d : Nat) (a Nat.+ d = b Nat.+ c) : int_data a b = int_data c d
+\end{verbatim}
+
+И далее, чтобы показать равенство равенств, мы сможем воспользоваться библиотечной функцией \verb!Path.inProp!
+(без указания \verb!\truncate! данный код не скомпилируется):
+
+\begin{verbatim}
+\func integer_eq (x y : Integer) (p1 p2 : x = y) : p1 = p2 => Path.inProp p1 p2
+\end{verbatim}
+
+\begin{enumerate}
+\item Поясните (на метаязыке, с точки зрения топологии), почему неусечённый тип \verb!Integer! --- не множество. \emph{Указание:} 
+заметим, что путь $\langle 0, 0\rangle = \langle 0, 0 \rangle$ можно получить композицией путей $\langle 0, 0 \rangle = \langle 1,1 \rangle$
+и $\langle 1, 1\rangle = \langle 0, 0 \rangle$.
+\item Определите функцию \verb!isSet: \Type -> \Type!, результат которой обитаем если исходный тип является множеством ---
+в качестве источника вдохновения можно взять \verb!isProp!.
+Докажите, что \verb!Nat! --- множество.
+\item Использовать конструкцию \verb!\truncate! необязательно --- вместо неё можно указать надлежащий дополнительный конструктор
+равенства (теперь для путей) --- и указать надлежащую функцию \verb!\use \level!:
+\begin{verbatim}
+ | eq_eq (a b : Integer) (p1 p2 : a = b) : p1 = p2
+  \where { \use \level asSet ... }
+\end{verbatim}
+
+Дополните описание типа данных так, чтобы тип данных \verb!Integer! оказался множеством без специальной конструкции 
+\verb!\truncate! (убедитесь, что аналог \verb!integer_eq! скомпилируется).
+Также исправьте определение функции \verb!inc! из прошлого задания.
+
+\end{enumerate}
+
+\item Рассмотрим аксиому для квантора существования из исчисления предикатов (в гильбертовской форме):
+\begin{verbatim}
+\func exists-axiom {T : \Type} {A : T -> \Prop} (evidence : T) (proof : A evidence) 
+    : Exists (x : T) (A x) => inP (evidence, proof)
+\end{verbatim}
+
+Сформулируйте и докажите:
+\begin{enumerate}
+\item правило вывода из исчисления предикатов;
+\item правило удаления квантора существования из исчисления предикатов в натуральном выводе:
+$$\infer{\vdash\psi}{\vdash\exists x.\varphi(x)\quad\quad \varphi(\theta)\vdash\psi}$$
+\end{enumerate}
+
+\item Научимся раскрывать усечённый тип данных (при возможности это сделать):
+\begin{enumerate}
+\item По $\exists p.p' = x$ постройте такой $p$, что $p' = x$: 
+\begin{verbatim}\func safe-dec (x : Nat) (Exists (p : Nat) (suc p = x)) : \Sigma (p : Nat) (suc p = x)\end{verbatim}
+\emph{Указание: } второй параметр нужен для того, чтобы исключить вариант $x = 0$.
+\item По \verb!not-equals : (x > y || x < y)! (обратите внимание, здесь применяется усечённое <<или>>) получите \verb!x /= y!.
+\item По \verb!x : Nat! и\verb!p : Exists (p : Nat) (p * p = x)! найдите
+\verb!\Sigma (p : Nat) (p * p = x)! (мы здесь должны существенно использовать единственность натурального корня числа).
+\end{enumerate}
+
+\item В предыдущих заданиях мы строили фактор-множества вручную. То же можно сделать с помощью библиотечного типа данных \verb!Quotient!.
+\begin{enumerate}
+\item Постройте тип множества рациональных положительных чисел \verb!Rational! как фактор-множество пар $\langle a,b \rangle$ и $\langle c,d \rangle$
+по отношению $a\cdot d = b \cdot c$ ($a,c \in \mathbb{N}_0$, $b,d \in \mathbb{N}$).
+\item Определите арифметические операции (сложение, умножение).
+\item Постройте функцию \verb!to_rat (arg: Nat) : Rational! и \verb!from_rat! (выполняющую округление вниз). Покажите, что 
+\verb!\Pi (x : Nat) -> x = from_rat (to_rat x)!.
+\end{enumerate}
 \end{enumerate}
 \end{document}
