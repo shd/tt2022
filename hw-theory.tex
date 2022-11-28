@@ -901,7 +901,8 @@ $[a_0,a_1,\dots,a_n]$ --- уникальный.
 \end{verbatim}
 
 Дополните описание типа данных так, чтобы тип данных \verb!Integer! оказался множеством без специальной конструкции 
-\verb!\truncate! (убедитесь, что аналог \verb!integer_eq! скомпилируется).
+\verb!\truncate! (убедитесь, что Path.inProp p1 p2 теперь определён для путей на \verb!Ingeger!, 
+и поэтому аналог \verb!integer_eq! скомпилируется).
 Также исправьте определение функции \verb!inc! из прошлого задания.
 
 \end{enumerate}
@@ -924,15 +925,17 @@ $$\infer{\vdash\psi}{\vdash\exists x.\varphi(x)\quad\quad \varphi(\theta)\vdash\
 \item По $\exists p.p' = x$ постройте такой $p$, что $p' = x$: 
 \begin{verbatim}\func safe-dec (x : Nat) (Exists (p : Nat) (suc p = x)) : \Sigma (p : Nat) (suc p = x)\end{verbatim}
 \emph{Указание: } второй параметр нужен для того, чтобы исключить вариант $x = 0$.
-\item По \verb!not-equals : (x > y || x < y)! (обратите внимание, здесь применяется усечённое <<или>>) получите \verb!x /= y!.
-\item По \verb!x : Nat! и\verb!p : Exists (p : Nat) (p * p = x)! найдите
+\item По \verb!not-equals : (x > y || x < y)! при \verb!x y : Nat! 
+(обратите внимание, здесь применяется усечённое <<или>>) получите \verb!x /= y!.
+\item По \verb!x : Nat! и \verb!p : Exists (p : Nat) (p * p = x)! найдите
 \verb!\Sigma (p : Nat) (p * p = x)! (мы здесь должны существенно использовать единственность натурального корня числа).
 \end{enumerate}
 
 \item В предыдущих заданиях мы строили фактор-множества вручную. То же можно сделать с помощью библиотечного типа данных \verb!Quotient!.
 \begin{enumerate}
 \item Постройте тип множества рациональных положительных чисел \verb!Rational! как фактор-множество пар $\langle a,b \rangle$ и $\langle c,d \rangle$
-по отношению $a\cdot d = b \cdot c$ ($a,c \in \mathbb{N}_0$, $b,d \in \mathbb{N}$).
+по отношению <<равны как простые дроби>>:
+$\langle a, b \rangle \approx \langle c, d \rangle$, если $a\cdot d = b \cdot c$ ($a,c \in \mathbb{N}_0$, $b,d \in \mathbb{N}$).
 \item Определите арифметические операции (сложение, умножение).
 \item Постройте функцию \verb!to_rat (arg: Nat) : Rational! и \verb!from_rat! (выполняющую округление вниз). Покажите, что 
 \verb!\Pi (x : Nat) -> x = from_rat (to_rat x)!.
