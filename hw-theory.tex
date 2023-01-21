@@ -923,7 +923,7 @@ $$\infer{\vdash\psi}{\vdash\exists x.\varphi(x)\quad\quad \varphi(\theta)\vdash\
 \item Научимся раскрывать усечённый тип данных (при возможности это сделать):
 \begin{enumerate}
 \item По $\exists p.p' = x$ постройте такой $p$, что $p' = x$: 
-\begin{verbatim}\func safe-dec (x : Nat) (Exists (p : Nat) (suc p = x)) : \Sigma (p : Nat) (suc p = x)\end{verbatim}
+\begin{verbatim}\func safe-dec (x : Nat) (e : Exists (p : Nat) (suc p = x)) : \Sigma (p : Nat) (suc p = x)\end{verbatim}
 \emph{Указание: } второй параметр нужен для того, чтобы исключить вариант $x = 0$.
 \item По \verb!not-equals : (x > y || x < y)! при \verb!x y : Nat! 
 (обратите внимание, здесь применяется усечённое <<или>>) получите \verb!x /= y!.
